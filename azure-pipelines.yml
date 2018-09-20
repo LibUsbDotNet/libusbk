@@ -1,0 +1,66 @@
+jobs:
+- job: windows_dll
+  pool:
+    vmImage: 'vs2017-win2016'
+  steps:
+  - task: MSBuild@1
+    inputs:
+      solution: 'libusbK\src\dll\libusbK_dll.vcxproj'
+      platform: Win32
+      configuration: Release
+    displayName: 'Build libusbk.dll (32-bit)'
+
+  - task: MSBuild@1
+    inputs:
+      solution: 'libusbK\src\dll\libusbK_dll.vcxproj'
+      platform: x64
+      configuration: Release
+    displayName: 'Build libusbk.dll (64-bit)'
+
+  - script: |
+      mkdir %BUILD_ARTIFACTSTAGINGDIRECTORY%\runtimes\win-x86\native
+      copy libusbK\src\dll\bin\dll\Win32\Release\libusbk.dll %BUILD_ARTIFACTSTAGINGDIRECTORY%\runtimes\win-x86\native
+      copy libusbK\src\dll\bin\dll\Win32\Release\libusbk.pdb %BUILD_ARTIFACTSTAGINGDIRECTORY%\runtimes\win-x86\native
+      mkdir %BUILD_ARTIFACTSTAGINGDIRECTORY%\runtimes\win-x64\native
+      copy libusbK\src\dll\bin\dll\x64\Release\libusbk.dll %BUILD_ARTIFACTSTAGINGDIRECTORY%\runtimes\win-x64\native
+      copy libusbK\src\dll\bin\dll\x64\Release\libusbk.pdb %BUILD_ARTIFACTSTAGINGDIRECTORY%\runtimes\win-x64\native
+    displayName: 'Copy artifacts'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
+      artifactName: 'drop' 
+      publishLocation: 'Container'
+    displayName: 'Publish libusbk.dll artifacts'
+
+- job: windows_sys
+  pool:
+    vmImage: 'vs2017-win2016'
+  steps:
+  - script: |
+      choco install wget 7zip
+    displayName: 'Install dependencies'
+    
+  - script: |
+      wget https://download.microsoft.com/download/4/A/2/4A25C7D5-EFBE-4182-B6A9-AE6850409A78/GRMWDK_EN_7600_1.ISO -O GRMWDK_EN_7600_1.ISO
+      mkdir GRMWDK
+      7z x GRMWDK_EN_7600_1.ISO -oGRMWDK
+      GRMWDK\KitSetup.exe /install {45273B30-342D-4748-494A-4B4C4D4E4F50} /no-view /ui-level express
+    displayName: 'Download and install WDK 7.1'
+
+  - script: |
+      cd libusbk
+      make dist
+    displayName: 'make dist'
+
+  - script: |
+      cd libusbk
+      make zip zip=bin
+    displayName: 'make zip'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: 'libusbK\package\libusbK-3.0.7.0-bin.7z'
+      artifactName: 'dist'
+      publishLocation: 'Container'
+    displayName: 'Publish libusbK distribution'
