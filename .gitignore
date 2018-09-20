@@ -4,3 +4,7 @@
 bin/
 Debug/
 Backup/
+objchk_*/
+objfre_*/
+*.log
+*.lst
