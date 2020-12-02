@@ -26,11 +26,8 @@ jobs:
       copy libusbK\src\dll\bin\dll\x64\Release\libusbk.pdb %BUILD_ARTIFACTSTAGINGDIRECTORY%\runtimes\win-x64\native
     displayName: 'Copy artifacts'
 
-  - task: PublishBuildArtifacts@1
-    inputs:
-      pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
-      artifactName: 'drop' 
-      publishLocation: 'Container'
+  - publish: '$(Build.ArtifactStagingDirectory)' 
+    artifact: windows
     displayName: 'Publish libusbk.dll artifacts'
 
 - job: windows_sys
@@ -58,9 +55,6 @@ jobs:
       make zip zip=bin
     displayName: 'make zip'
 
-  - task: PublishBuildArtifacts@1
-    inputs:
-      pathtoPublish: 'libusbK\package\libusbK-3.0.7.0-bin.7z'
-      artifactName: 'dist'
-      publishLocation: 'Container'
+  - publish: 'libusbK\package\libusbK-3.0.7.0-bin.7z'
+    artifact: dist
     displayName: 'Publish libusbK distribution'
